@@ -45,6 +45,49 @@ small {
     font-size: 10px;
 }
 
+dialog {
+    border: none;
+    box-shadow: 0px 0px 10px 0px gray;
+    width: 400px;
+    height: 500px;
+    animation: 0.5s dlgOpen;
+    background: none;
+    backdrop-filter: blur(20px);
+}
+@keyframes dlgOpen {
+    from {
+        transform: translateY(-500px) scale(10%);
+        opacity: 0%;
+    }
+}
+.dlgTitle {
+    float: left;
+    padding-left: 50px;
+}
+dialog select {
+    background: none;
+}
+dialog small {
+    color: black;
+}
+.closeBtn {
+    background: none;
+    border: none;
+    float: right;
+    padding: 20px;
+    border-radius: 100%;
+}
+.closeBtn:hover {
+    transform: rotate(90deg);
+    color: red;
+}
+.dlgHeader {
+    margin-bottom: 70px;
+}
+dialog h2 {
+    text-align: center;
+}
+
 /* header */
 header {
     background: rgba(0,0,0,0.02);
@@ -147,48 +190,6 @@ footer {
 }
 
 /* setting Dlg */
-#settingDlg {
-    border: none;
-    box-shadow: 0px 0px 10px 0px gray;
-    width: 400px;
-    height: 500px;
-    animation: 0.5s settingOpen;
-    background: none;
-    backdrop-filter: blur(20px);
-}
-@keyframes settingOpen {
-    from {
-        transform: translateY(-500px) scale(10%);
-        opacity: 0%;
-    }
-}
-#settingDlgTitle {
-    float: left;
-    padding-left: 50px;
-}
-#settingDlg select {
-    background: none;
-}
-#settingDlg small {
-    color: black;
-}
-.closeBtn {
-    background: none;
-    border: none;
-    float: right;
-    padding: 20px;
-    border-radius: 100%;
-}
-.closeBtn:hover {
-    transform: rotate(90deg);
-    color: red;
-}
-#settingDlgHeader {
-    margin-bottom: 70px;
-}
-#settingDlg h2 {
-    text-align: center;
-}
 .settingTable {
     width: 100%;
 }

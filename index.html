@@ -25,14 +25,24 @@
             </button>
         </footer>
         <dialog id="settingDlg">
-            <div id="settingDlgHeader">
-                <h3 id="settingDlgTitle">SETTING</h3>
+            <div class="dlgHeader">
+                <h3 class="dlgTitle">SETTING</h3>
                 <button class="closeBtn" onclick="openSetting()">
                     ✕
                 </button>
             </div>
             <hr>
             <div id="settingMain"></div>
+        </dialog>
+        <dialog id="alert">
+            <div class="dlgHeader">
+                <h3 id="alertTitle" class="dlgTitle">TITLE</h3>
+                <button class="closeBtn">
+                    ✕
+                </button>
+            </div>
+            <hr>
+            <div id="alertText"></div>
         </dialog>
         <script src="script.js"></script>
     </body>

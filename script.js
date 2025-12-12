@@ -1,9 +1,19 @@
-const $ = v=>document.querySelector(v);
+
+const $ = v=>{
+    if(typeof v === "object") return v.reduce((pre,cur)=>[...pre,$(cur)],[]);
+    return document.querySelector(v);
+};
 const $id = v=>document.getElementById(v);
 
 const toJson = v=>JSON.stringify(v);
 const fromJson = v=>JSON.parse(v);
 const copy = v=>fromJson(toJson(v));
+
+const _alert = (title,text)=>{
+    const [$title,$text] = $(["#alertTitle","#alertText"]);
+};
+
+// settings
 
 const langSet = {
     한국어 : {
@@ -50,7 +60,6 @@ const basicBookMark = [
     }
 ];
 
-// settings
 const basic_settings = {
     clock_language : "한국어",
     clock_appearSec : true,
