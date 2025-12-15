@@ -46,6 +46,7 @@ small {
 }
 
 dialog {
+    position: fixed;
     border: none;
     box-shadow: 0px 0px 10px 0px gray;
     width: 400px;
@@ -86,6 +87,51 @@ dialog small {
 }
 dialog h2 {
     text-align: center;
+}
+
+#alert {
+    text-align: center;
+    height: 250px;
+}
+#alertText {
+    padding: 30px;
+}
+.confirmTb {
+    width: 100%;
+    margin-top: 65px;
+    margin-bottom: -50px;
+}
+.confirmTb td {
+    width: 50%;
+}
+.confirmBtn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    backdrop-filter: blur(20px);
+    background: rgba(0,0,0,0.05);
+}
+.confirmBtn:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+.promptTb {
+    margin-top:30px;
+}
+.promptIpt {
+    background: rgba(0,0,0,0.05);
+    width: 100%;
+    padding: 20px;
+    margin-left: -20px;
+    border: none;
+}
+.promptIpt:hover {
+    background: rgba(0,0,0,0.1);
+}
+.promptLbl {
+    margin-top: -20px;
+    margin-bottom: 10px;
+    float: left;
 }
 
 /* header */
@@ -210,8 +256,12 @@ footer {
 #set_bgValue {
     width: 50%;
 }
-#importBtn,#exportBtn {
+.saveloadBtn {
     background: none;
     border: none;
-    margin-top: 30px;
+    width: 100%;
+    padding: 10px;
+}
+.saveloadBtn:hover {
+    background: rgba(0,0,0,0.05);
 }

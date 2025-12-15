@@ -9,8 +9,58 @@ const toJson = v=>JSON.stringify(v);
 const fromJson = v=>JSON.parse(v);
 const copy = v=>fromJson(toJson(v));
 
+const obj_key_filter = (obj,keys)=>Object.entries(obj).filter(v=>keys.includes(v[0])).reduce((pre,cur)=>{pre[cur[0]]=cur[1];return pre},{});
+
 const _alert = (title,text)=>{
     const [$title,$text] = $(["#alertTitle","#alertText"]);
+
+    $title.innerHTML = title;
+    $text.innerHTML = text;
+
+    $("#alert").showModal();
+};
+
+const _confirm = (title,text,callback)=>{
+    const now = +new Date();
+    _alert(title,`
+        ${text}
+        <table class="confirmTb">
+            <tr>
+                <td><button id="yesBtn${now}" class="confirmBtn">YES</button></td>
+                <td><button id="noBtn${now}" class="confirmBtn">NO</button></td>
+            </tr>
+        </table>
+    `);
+    $("#yesBtn"+now).addEventListener('click',()=>{
+        callback(true);
+        $("#alert").close();
+    });
+    $("#noBtn"+now).addEventListener('click',()=>{
+        callback(false);
+        $("#alert").close();
+    });
+};
+
+const _prompt = (title,text,callback,placeholder="")=>{
+    const now = +new Date();
+    _alert(title,`
+        <label class="promptLbl">${text}</label>
+        <input id="promptIpt${now}" class="promptIpt" placeholder="${placeholder}">
+        <table class="promptTb confirmTb">
+            <tr>
+                <td><button id="yesBtn${now}" class="confirmBtn">SEND</button></td>
+                <td><button id="noBtn${now}" class="confirmBtn">CANCEL</button></td>
+            </tr>
+        </table>
+    `);
+    $("#yesBtn"+now).addEventListener('click',()=>{
+        callback($("#promptIpt"+now).value);
+        $("#alert").close();
+    });
+    $("#noBtn"+now).addEventListener('click',()=>{
+        callback(false);
+        $("#alert").close();
+    });
 };
 
 // settings
@@ -61,6 +111,20 @@ const basicBookMark = [
 ];
 
 const basic_settings = {
+    // searchEngine
+    usingSearchEngine : "Google",
+    searchEngines : [{
+        name : "Google",
+        url : "https://www.google.com/search",
+        arg : "q"
+    },
+    {
+        name : "Naver",
+        url : "https://search.naver.com/search.naver",
+        arg : "query"
+    }],
+
+    // design
     clock_language : "한국어",
     clock_appearSec : true,
     clock_timeSign : false,
@@ -70,9 +134,12 @@ const basic_settings = {
     titleAnimation : true,
     bgType : "color",
     bgValue : "white",
-    bookmarks : basicBookMark,
-    showBookmark : false
+    showBookmark : false,
+
+    // book mark
+    bookmarks : basicBookMark
 };
+const designSettings = ["clock_language","clock_appearSec","clock_timeSign","font","title","titleColor","titleAnimation","byType","bgValue","showBookmark"];
 let active_settings;
 
 const initialize = (dat)=>{
@@ -84,10 +151,12 @@ const initialize = (dat)=>{
     });
 };
 
+const save_path = "srchset";
+
 // st = setting
 const st = (value)=>{
-    if(value) localStorage.setItem("settings",toJson(value));
-    const dat = fromJson(localStorage.getItem("settings"));
+    if(value) localStorage.setItem(save_path,toJson(value));
+    const dat = fromJson(localStorage.getItem(save_path));
     dat.title+="";
     return dat;
 };
@@ -162,7 +231,6 @@ const updateClock = (function foo(){
 })();
 setInterval(updateClock,1000);
 
-
 // searching...
 const $schIpt = $id("searchIpt");
 const $schForm = $id("searchForm");
@@ -173,36 +241,25 @@ const updatePlaceHolder = ()=>$schIpt.placeholder=`${$engineSelect.value}에서 
 $engineSelect.onchange = function(){changeEngine(this.value)};
 
 // change Engine
-const engines = [
-    {
-        name : "Google",
-        url : "https://www.google.com/search",
-        arg : "q"
-    },
-    {
-        name : "Naver",
-        url : "https://search.naver.com/search.naver",
-        arg : "query"
-    }
-];
 const changeEngine = engineName=>{
-    const eng = engines.find(v=>v.name===engineName);
+    const eng = active_settings.searchEngines.find(v=>v.name===engineName);
     if(!eng) return false;
+    active_settings.usingSearchEngine = engineName;
     $schForm.action = eng.url;
     $schIpt.name = eng.arg;
     updatePlaceHolder();
+    updateEngineList();
     return true;
 };
 
 // engine Select
-const updateEngineList = ()=>engines.forEach(eng=>{
+const updateEngineList = ()=>{$engineSelect.innerHTML="";(active_settings.searchEngines).forEach(eng=>{
     $engineSelect.innerHTML += `
-    <option value="${eng.name}">${eng.name}</option>
+    <option value="${eng.name}" ${eng.name===active_settings.usingSearchEngine?"selected":""}>${eng.name}</option>
     `;
-});
+})};
 
 updateEngineList();
-changeEngine("Google");
 
 
 // setting
@@ -320,23 +377,48 @@ const updateSettingPage = ()=>{
         </tr>
 
         </table>
-        <button id="exportBtn" onclick="userSetExport()">
-            설정 내보내기
-        </button>
-        <button id="importBtn" onclick="userSetImport()">
-            설정 불러오기
-        </button>
+        <h2>설정 저장
+        <small style="cursor:pointer" onclick="_alert(
+        '설정 저장 도움말',
+        '아무 설정이나 내보낸 후, 설정 불러오기로 불러오기가 가능합니다.<br>예시를 들자면, 만약 스타일 설정 내보내기 이후에 해당 설정을 불러오기하면 스타일 설정만 적용됩니다.'
+        )">도움말</small>
+        </h2>
+        <table class="settingTable">
+            <tr>
+                <td>
+                    <button id="exportBtn" class="saveloadBtn" onclick="userSetExport()">
+                        설정 내보내기
+                    </button>
+                </td>
+                <td>
+                    <button id="importBtn" class="saveloadBtn" onclick="userSetImport()">
+                        설정 불러오기
+                    </button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button id="exportBtn" class="saveloadBtn" onclick="userSetExport('design')">
+                        스타일 설정 내보내기
+                    </button>
+                </td>
+                <td>
+                    <button id="exportBtn" class="saveloadBtn" onclick="userSetExport('bookmark')">
+                        북마크 설정 내보내기
+                    </button>
+                </td>
+            </tr>
+        </table>
     `;
     updateSettingEvents();
 };
 
-const userSetExport = ()=>{
-    navigator.clipboard.writeText(exportSet());
-    alert('클립보드에 복사되었습니다.');
+const userSetExport = type=>{
+    navigator.clipboard.writeText(exportSet(type??null));
+    _alert('설정 내보내기','클립보드에 복사되었습니다.');
 };
-const userSetImport = ()=>{
-    const dat = prompt('불러오실 설정데이터를 붙여넣기 하여 주십시오.');
-    applySet(dat);
+const userSetImport = type=>{
+    _prompt('설정 불러오기','불러오실 설정데이터를 붙여넣기 하여 주십시오.',applySet);
 };
 
 const updateSettingEvents = ()=>{
@@ -365,6 +447,7 @@ const updateSettingEvents = ()=>{
 };
 
 const applySet = txt=>{
+    if(!txt) return false;
     const setRes = copy(active_settings); // 최종 적용될 것
     const newSet = fromJson(txt); // 들어온 정보
 
@@ -375,7 +458,12 @@ const applySet = txt=>{
 
     initialize(setRes);
 };
-const exportSet = ()=>toJson(active_settings);
+const exportSet = option=>{
+    let thing = active_settings;
+    if(option==="design") thing = obj_key_filter(active_settings,designSettings);
+    if(option==="bookmark") thing = obj_key_filter(active_settings,["bookmarks"]);
+    return toJson(thing);
+};
 
 document.title = active_settings.title;
 if(active_settings.titleAnimation)
@@ -388,6 +476,7 @@ else {
 setInterval(()=>document.querySelectorAll("*").forEach(v=>v.style.fontFamily=active_settings.font));
 setInterval(()=>{
     st(active_settings);
+    changeEngine(active_settings.usingSearchEngine);
 },100);
 
 if(active_settings.bgType === "color") {
@@ -411,7 +500,7 @@ const refreshBookMark = function(){
         <button class="deleteBMBtn" onclick="deleteBookMark('${cur.name}')"></button>
         `,"")}
 
-    <button id="addBMBtn">
+    <button id="addBMBtn" onclick="addBookMark()">
         +
     </button>
     ⌟
@@ -421,4 +510,17 @@ const deleteBookMark = function(name){
     active_settings.bookmarks=active_settings.bookmarks.filter(v=>v.name!==name);
     refreshBookMark();
 };
+const addBookMark = ()=>_prompt("북마크 추가","북마크 추가하기:",ipt=>{
+    if(!ipt) return;
+    const [name,url] = ipt.split(";;;");
+    if(!url) {
+        setTimeout(()=>{
+            _alert("오류","입력 양식을 따라주시기 바랍니다.");
+        });
+        return;
+    }
+    
+    active_settings.bookmarks.push({name:name,href:url});
+    refreshBookMark();
+},"(북마크명);;;(웹주소)");
 refreshBookMark();

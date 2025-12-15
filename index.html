@@ -37,11 +37,10 @@
         <dialog id="alert">
             <div class="dlgHeader">
                 <h3 id="alertTitle" class="dlgTitle">TITLE</h3>
-                <button class="closeBtn">
+                <button class="closeBtn" onclick="$('#alert').close()">
                     ✕
                 </button>
             </div>
-            <hr>
             <div id="alertText"></div>
         </dialog>
         <script src="script.js"></script>
