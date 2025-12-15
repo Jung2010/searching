@@ -423,11 +423,10 @@ const updateSettingPage = ()=>{
         const sets = copy(active_settings);
         initialize();
         _confirm("초기화","초기화 하시겠습니까?",val=>{
-            if(val) {
-                location.href="";
-                return;
-            }
-            initialize(sets);
+            if(val)
+                location.reload();
+            else
+                initialize(sets);
         });
     });
     updateSettingEvents();
@@ -552,7 +551,7 @@ $("#helpBtn").addEventListener('click',()=>_alert(
     <table class="settingTable">
         <tr>
             <th>Version</th>
-            <td>1.0</td>
+            <td>1.0.2</td>
         </tr>
         <tr>
             <th>Released</th>
