@@ -11,12 +11,13 @@ const copy = v=>fromJson(toJson(v));
 
 const obj_key_filter = (obj,keys)=>Object.entries(obj).filter(v=>keys.includes(v[0])).reduce((pre,cur)=>{pre[cur[0]]=cur[1];return pre},{});
 
-const _alert = (title,text)=>{
+const _alert = (title,text,height=250)=>{
     const [$title,$text] = $(["#alertTitle","#alertText"]);
 
     $title.innerHTML = title;
     $text.innerHTML = text;
 
+    $("#alert").style.height=height+"px";
     $("#alert").showModal();
 };
 
@@ -157,15 +158,19 @@ const save_path = "srchset";
 const st = (value)=>{
     if(value) localStorage.setItem(save_path,toJson(value));
     const dat = fromJson(localStorage.getItem(save_path));
-    dat.title+="";
+    if(dat)dat.title+="";
     return dat;
 };
 
 const autoInitializing = ()=>{ // 현 세팅값이 이상하면 초기화
     if(!st()) {
+        console.log("초기 초기화중...");
         initialize(basic_settings);
+        console.log("초기 초기화 완료");
     } else {
+        // console.log("데이터 완전 확인 중...");
         initialize(st());
+        // console.log("데이터 완전 확인 완료");
     }
 };
 
@@ -282,7 +287,6 @@ const updateSettingPage = ()=>{
     ];
     $page.innerHTML = `
     <small>입력식 설정은 입력 후 포커스 이동 또는 엔터키를 눌러주십시오.</small>
-    <button id="initializeBtn" onclick="initialize();openSetting();location.reload();">기본값으로 초기화</button>
     <h2>
         디자인<br>
         <small>일부는 새로고침시 적용</small>
@@ -408,12 +412,25 @@ const updateSettingPage = ()=>{
                     </button>
                 </td>
             </tr>
+            <tr>
+                <td>
+                    <button id="initializeBtn" class="saveloadBtn">기본값으로 초기화</button>
+                </td>
+            </tr>
         </table>
     `;
+    $("#initializeBtn").addEventListener('click',()=>{
+        const sets = copy(active_settings);
+        initialize();
+        _confirm("초기화","초기화 하시겠습니까?",val=>{
+            if(val) location.reload();
+            initialize(sets);
+        });
+    });
     updateSettingEvents();
 };
 
-const userSetExport = type=>{
+const userSetExport = (type)=>{
     navigator.clipboard.writeText(exportSet(type??null));
     _alert('설정 내보내기','클립보드에 복사되었습니다.');
 };
@@ -524,3 +541,25 @@ const addBookMark = ()=>_prompt("북마크 추가","북마크 추가하기:",ipt
     refreshBookMark();
 },"(북마크명);;;(웹주소)");
 refreshBookMark();
+
+//information
+$("#helpBtn").addEventListener('click',()=>_alert(
+    `정보`,
+    `
+    <table class="settingTable">
+        <tr>
+            <th>Version</th>
+            <td>1.0</td>
+        </tr>
+        <tr>
+            <th>Released</th>
+            <td>2025. 12. 15</td>
+        </tr>
+        <tr>
+            <th>Fonts</th>
+            <td><a href="https://noonnu.cc">눈누</a></td>
+        </tr>
+    </table>
+    Made By HJ
+    `
+));

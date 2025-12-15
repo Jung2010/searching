@@ -32,6 +32,17 @@ html,body {
     height: 100%;
 }
 
+a {
+    color: royalblue;
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+a:visited {
+    color: darkblue;
+}
+
 button {
     cursor: pointer;
 }
@@ -226,12 +237,13 @@ footer {
     background: rgba(0,0,0,0.05);
     backdrop-filter: blur(1px);
 }
-#settingBtn {
+.footerBtn {
     background: rgba(0,0,0,0.05);
     border: none;
     padding: 10px;
+    float: left;
 }
-#settingBtn:hover {
+.footerBtn:hover {
     background: rgba(0,0,0,0.01);
 }
 
@@ -243,11 +255,14 @@ footer {
     width: 50%;
     text-align: right;
 }
-#initializeBtn {
+.settingTable td {
+    text-align: left;
+}
+/* #initializeBtn {
     color: royalblue;
     background: none;
     border: none;
-}
+} */
 .tableIpt {
     border: none;
     background: none;
