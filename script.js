@@ -423,7 +423,10 @@ const updateSettingPage = ()=>{
         const sets = copy(active_settings);
         initialize();
         _confirm("초기화","초기화 하시겠습니까?",val=>{
-            if(val) location.reload();
+            if(val) {
+                location.href="";
+                return;
+            }
             initialize(sets);
         });
     });
