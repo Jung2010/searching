@@ -1,23 +1,31 @@
 
+
+const info = {
+    version: "1.0.5 BETA 1",
+    fortune: Math.round(Math.random()*100)+"%"
+};
+
+
 const $ = v=>{
     if(typeof v === "object") return v.reduce((pre,cur)=>[...pre,$(cur)],[]);
     return document.querySelector(v);
 };
 const $id = v=>document.getElementById(v);
 
-const toJson = v=>JSON.stringify(v);
+const toJson = (...arg)=>JSON.stringify(...arg);
 const fromJson = v=>JSON.parse(v);
 const copy = v=>fromJson(toJson(v));
 
 const obj_key_filter = (obj,keys)=>Object.entries(obj).filter(v=>keys.includes(v[0])).reduce((pre,cur)=>{pre[cur[0]]=cur[1];return pre},{});
 
-const _alert = (title,text,height=250)=>{
+const _alert = (title,text,height=250,width=400)=>{
     const [$title,$text] = $(["#alertTitle","#alertText"]);
 
     $title.innerHTML = title;
     $text.innerHTML = text;
 
     $("#alert").style.height=height+"px";
+    if(width) $("#alert").style.width=width+"px";
     $("#alert").showModal();
 };
 
@@ -138,7 +146,11 @@ const basic_settings = {
     showBookmark : false,
 
     // book mark
-    bookmarks : basicBookMark
+    bookmarks : basicBookMark,
+
+    // history
+    actHistory : true,
+    histories : []
 };
 const designSettings = ["clock_language","clock_appearSec","clock_timeSign","font","title","titleColor","titleAnimation","byType","bgValue","showBookmark"];
 let active_settings;
@@ -245,17 +257,62 @@ const $engineSelect = $id("searchEngine");
 const updatePlaceHolder = ()=>$schIpt.placeholder=`${$engineSelect.value}에서 검색하기`;
 $engineSelect.onchange = function(){changeEngine(this.value)};
 
+// searchIpt Evaluation
+const $searchRes = $id("searchResult");
+$searchRes.innerHTML = "";
+
+$schIpt.addEventListener('keyup',e=>{
+    const q = $schIpt.value;
+    const Q = q.replaceAll(" ","");
+    const arrQ = Array.from(Q);
+    const operaters = ["+","-","*","/"];
+
+    let isMathExpresion = true;
+    for(let i = 0; i < arrQ.length; i++) {
+        let breaks = false;
+        const d_false = function() {
+            isMathExpresion = false;
+            breaks = true;
+        };
+        if(breaks) break;
+
+        const letter = arrQ[i];
+        if(isNaN(letter) && !(operaters.includes(letter))) d_false(); // 숫자도 연산자도 아닌 경우
+        else if(!i&&isNaN(letter)) d_false(); // 첫글자인데 연산자인 경우
+        else if(isNaN(arrQ[i-1])&&isNaN(letter)) d_false(); // 전과 잇달아 연산자가 나타나는 경우
+        else if(i===arrQ.length-1&&isNaN(letter)) d_false(); // 맨 마지막에 연산자가 나타나는 경우
+        else if(eval(Q)===+Q) d_false(); // 숫자밖에 없는 경우
+        else if(Q==="") d_false(); // 아무것도 없는 경우
+    }
+
+    if(isMathExpresion) {
+        const calcRes = eval(Q);
+        $searchRes.innerHTML = calcRes;
+    }
+});
+
 // change Engine
-const changeEngine = engineName=>{
-    const eng = active_settings.searchEngines.find(v=>v.name===engineName);
-    if(!eng) return false;
-    active_settings.usingSearchEngine = engineName;
-    $schForm.action = eng.url;
-    $schIpt.name = eng.arg;
-    updatePlaceHolder();
-    updateEngineList();
-    return true;
-};
+const changeEngine = (function(){
+    let count = 0;
+    return function(engineName){
+        const eng = active_settings.searchEngines.find(v=>v.name===engineName);
+        if(!eng) return false;
+        if(active_settings.usingSearchEngine === engineName && count>0) {
+            first = false;
+            return false;
+        }
+        active_settings.usingSearchEngine = engineName;
+        $schForm.action = eng.url;
+        $schIpt.name = eng.arg;
+        updatePlaceHolder();
+        updateEngineList();
+        const $ssel = $("#settingSearchEngineList");
+        if($ssel)
+            $ssel.innerHTML = settingSearchEngineList();
+        count++;
+        return true;
+    };
+})();
 
 // engine Select
 const updateEngineList = ()=>{$engineSelect.innerHTML="";(active_settings.searchEngines).forEach(eng=>{
@@ -277,6 +334,23 @@ const openSetting = ()=>{
         $sDlg.close();
 };
 
+const settingSearchEngineList = ()=> active_settings.searchEngines.reduce((html,engine)=>html+`
+    <tr ${active_settings.usingSearchEngine===engine.name?`
+        style="
+        color: black;
+        font-weight: 900;
+        "
+        `:""}
+        onclick="changeEngine('${engine.name}')"
+        >
+        <th style="width: auto;">${engine.name}</th>
+        <td style="width: auto;">
+            URL : ${engine.url}<br>
+            ARG : ${engine.arg}
+        </td>
+    </tr>
+`,'');
+
 const updateSettingPage = ()=>{
     const $page = $id("settingMain");
     const fonts = [
@@ -287,6 +361,17 @@ const updateSettingPage = ()=>{
     ];
     $page.innerHTML = `
     <small>입력식 설정은 입력 후 포커스 이동 또는 엔터키를 눌러주십시오.</small>
+    <h2>
+        검색엔진
+    </h2>
+    <details id="engineDetail">
+        <summary>
+            목록 보기
+        </summary>
+        <table class="settingTable" id="settingSearchEngineList">
+            ${settingSearchEngineList()}
+        </table>
+    </details>
     <h2>
         디자인<br>
         <small>일부는 새로고침시 적용</small>
@@ -381,6 +466,18 @@ const updateSettingPage = ()=>{
         </tr>
 
         </table>
+        <h2>방문기록</h2>
+        <table class="settingTable">
+            <tr>
+                <th>방문기록</th>
+                <td>
+                    <select id="set_actHistory">
+                        <option value="true" ${active_settings.actHistory?"selected":""}>활성화</option>
+                        <option value="false" ${active_settings.actHistory?"":"selected"}>비활성화</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
         <h2>설정 저장
         <small style="cursor:pointer" onclick="_alert(
         '설정 저장 도움말',
@@ -437,7 +534,7 @@ const userSetExport = (type)=>{
     _alert('설정 내보내기','클립보드에 복사되었습니다.');
 };
 const userSetImport = type=>{
-    _prompt('설정 불러오기','불러오실 설정데이터를 붙여넣기 하여 주십시오.',applySet);
+    _prompt('설정 불러오기','불러오실 설정데이터를 붙여넣기 하여 주십시오.',applySet,"↩");
 };
 
 const updateSettingEvents = ()=>{
@@ -496,7 +593,7 @@ setInterval(()=>document.querySelectorAll("*").forEach(v=>v.style.fontFamily=act
 setInterval(()=>{
     st(active_settings);
     changeEngine(active_settings.usingSearchEngine);
-},100);
+}, 100);
 
 if(active_settings.bgType === "color") {
     document.body.style.background=active_settings.bgValue;
@@ -551,7 +648,7 @@ $("#helpBtn").addEventListener('click',()=>_alert(
     <table class="settingTable">
         <tr>
             <th>Version</th>
-            <td>1.0.2</td>
+            <td>${info.version}</td>
         </tr>
         <tr>
             <th>Released</th>
@@ -561,7 +658,54 @@ $("#helpBtn").addEventListener('click',()=>_alert(
             <th>Fonts</th>
             <td><a href="https://noonnu.cc">눈누</a></td>
         </tr>
+        <tr>
+            <th>ICONS</th>
+            <td><a href="https://icons8.com">ICONS8</a></td>
+        </tr>
     </table>
     Made By HJ
     `
 ));
+
+document.body.addEventListener('keydown',e=>{if(e.key==="D"){
+    const showList = obj=>Object.entries(obj).reduce((html,cur)=>html+`
+        <tr>
+            <th>${cur[0]}</th>
+            <td style="text-align:left;"><pre>${toJson(cur[1],0,2)}</pre></td>
+        </tr>
+    `,'');
+    _alert("§ Developer Pane §",`
+        <input id="consoleIpt">
+        <button onclick="$('#evalRs').innerHTML=(eval($('#consoleIpt').value))">Eval</button>
+        <button onclick="setInterval(()=>{try{$('#evalRs').innerHTML=(eval($('#consoleIpt').value))}catch(e){}})">Auto Eval</button>
+        <div id="evalRs">Result</div>
+
+        <hr>
+
+        <h1>Program Infos</h1>
+        <table style="width:100%">
+            ${showList(info)}
+        </table>
+
+        <hr>
+
+        <h1>Active Setting</h1>
+        <table style="width:100%">
+            ${showList(active_settings)}
+        </table>
+
+        <hr>
+
+        <h1>Basic Setting</h1>
+        <table style="width:100%">
+            ${showList(basic_settings)}
+        </table>
+
+        <hr>
+
+        <h1>Language Packs</h1>
+        <table style="width:100%">
+            ${showList(langSet)}
+        </table>
+    `,800,800);
+}});
