@@ -1,6 +1,6 @@
 * {
-    outline: none;
     transition: all 0.2s;
+    outline: none;
 }
 
 *::-webkit-scrollbar{

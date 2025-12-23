@@ -1,7 +1,7 @@
 
 
 const info = {
-    version: "1.0.5 BETA 1",
+    version: "1.0.5 BETA 2",
     fortune: Math.round(Math.random()*100)+"%"
 };
 
@@ -277,17 +277,23 @@ $schIpt.addEventListener('keyup',e=>{
         if(breaks) break;
 
         const letter = arrQ[i];
-        if(isNaN(letter) && !(operaters.includes(letter))) d_false(); // 숫자도 연산자도 아닌 경우
-        else if(!i&&isNaN(letter)) d_false(); // 첫글자인데 연산자인 경우
-        else if(isNaN(arrQ[i-1])&&isNaN(letter)) d_false(); // 전과 잇달아 연산자가 나타나는 경우
-        else if(i===arrQ.length-1&&isNaN(letter)) d_false(); // 맨 마지막에 연산자가 나타나는 경우
-        else if(eval(Q)===+Q) d_false(); // 숫자밖에 없는 경우
-        else if(Q==="") d_false(); // 아무것도 없는 경우
+        try {
+            if(isNaN(letter) && !(operaters.includes(letter))) d_false(); // 숫자도 연산자도 아닌 경우
+            else if(!i&&isNaN(letter)) d_false(); // 첫글자인데 연산자인 경우
+            else if(isNaN(arrQ[i-1])&&isNaN(letter)) d_false(); // 전과 잇달아 연산자가 나타나는 경우
+            else if(i===arrQ.length-1&&isNaN(letter)) d_false(); // 맨 마지막에 연산자가 나타나는 경우
+            else if(eval(Q)===+Q) d_false(); // 숫자밖에 없는 경우
+        } catch(e) {
+            d_false();
+        }
     }
 
     if(isMathExpresion) {
         const calcRes = eval(Q);
+        if(calcRes===undefined) return false;
         $searchRes.innerHTML = calcRes;
+    } else {
+        $searchRes.innerHTML = "";
     }
 });
 
@@ -338,7 +344,6 @@ const settingSearchEngineList = ()=> active_settings.searchEngines.reduce((html,
     <tr ${active_settings.usingSearchEngine===engine.name?`
         style="
         color: black;
-        font-weight: 900;
         "
         `:""}
         onclick="changeEngine('${engine.name}')"
@@ -556,6 +561,8 @@ const updateSettingEvents = ()=>{
                     case "showBookmark" :
                         refreshBookMark();
                         break;
+                    case "font" :
+                        applyFont(active_settings.font);
                 }
             };
         }
@@ -589,10 +596,16 @@ else {
     $pgTitle.innerHTML = active_settings.title;
     $pgTitle.style.color = active_settings.titleColor;
 }
-setInterval(()=>document.querySelectorAll("*").forEach(v=>v.style.fontFamily=active_settings.font));
+
+const applyFont = function(font) {
+    document.querySelectorAll("body *").forEach(v=>v.style.fontFamily=font);
+};
+
+let first = true;
 setInterval(()=>{
     st(active_settings);
     changeEngine(active_settings.usingSearchEngine);
+    applyFont(active_settings.font);
 }, 100);
 
 if(active_settings.bgType === "color") {
